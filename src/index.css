@@ -1,0 +1,103 @@
+/* 全体のスタイル（iPhone向け） */
+:root {
+  --color-primary: #16a34a;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-bg: #f3f4f6;
+  --color-card: #ffffff;
+
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+    'Noto Sans JP', sans-serif;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  /* iPhoneでボタンなどをタップしたときの灰色のハイライトを消す */
+  -webkit-tap-highlight-color: transparent;
+  /* 画面の端を引っ張ったときのバウンドでアプリ全体が動かないようにする */
+  overscroll-behavior-y: none;
+}
+
+#root {
+  /* スマホ向けに最大幅480pxで中央寄せ */
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  /* ノッチ・ホームバーなどのセーフエリアを避ける */
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  background-color: var(--color-bg);
+}
+
+button,
+input,
+select {
+  /* iPhoneは16px未満の入力欄をタップすると勝手に拡大するので16pxにそろえる */
+  font: inherit;
+  font-size: 16px;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+.app-header {
+  padding: 16px;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px 16px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 16px;
+  background-color: var(--color-card);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+.card-label {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.card-amount {
+  font-size: 40px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  font-size: 14px;
+  color: var(--color-muted);
+  text-align: center;
+}
