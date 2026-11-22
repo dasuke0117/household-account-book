@@ -1,9 +1,10 @@
 // バックアップ（JSONファイルへの書き出し・読み込み）
 import { isValidDateKey } from './date'
-import { CATEGORIES, RATINGS, type Expense, type Settings } from './types'
+import { CATEGORIES, RATINGS, type Expense, type FixedCost, type Settings } from './types'
 
 const APP_ID = 'household-account-book'
-const BACKUP_VERSION = 1
+/** 1：最初の形式／2：毎月の固定費とメモを追加 */
+const BACKUP_VERSION = 2
 
 export interface BackupData {
   settings: Settings
@@ -56,6 +57,11 @@ function parseExpense(value: unknown, index: number): Expense {
   if (typeof createdAt !== 'number' || !Number.isFinite(createdAt)) {
     throw new Error(`${where}の記録時刻が正しくありません`)
   }
+  const { memo, fixedCostId } = value
+  if (memo !== undefined && typeof memo !== 'string') throw new Error(`${where}のメモが正しくありません`)
+  if (fixedCostId !== undefined && typeof fixedCostId !== 'string') {
+    throw new Error(`${where}の固定費IDが正しくありません`)
+  }
   return {
     id,
     amount,
@@ -63,7 +69,28 @@ function parseExpense(value: unknown, index: number): Expense {
     rating: rating as Expense['rating'],
     date,
     createdAt,
+    ...(memo !== undefined && { memo }),
+    ...(fixedCostId !== undefined && { fixedCostId }),
   }
+}
+
+function parseFixedCost(value: unknown, index: number): FixedCost {
+  const where = `${index + 1}件目の毎月の固定費`
+  if (!isRecord(value)) throw new Error(`${where}の形式が正しくありません`)
+  const { id, label, category, amount, lastAppliedMonth } = value
+  if (typeof id !== 'string' || id === '') throw new Error(`${where}のIDが正しくありません`)
+  if (typeof label !== 'string') throw new Error(`${where}の名前が正しくありません`)
+  if (!CATEGORIES.includes(category as FixedCost['category'])) {
+    throw new Error(`${where}のカテゴリ「${String(category)}」は使えません`)
+  }
+  if (!isPositiveInteger(amount)) throw new Error(`${where}の金額が正しくありません`)
+  if (
+    typeof lastAppliedMonth !== 'string' ||
+    (lastAppliedMonth !== '' && !isValidDateKey(`${lastAppliedMonth}-01`))
+  ) {
+    throw new Error(`${where}の記録済みの月が正しくありません`)
+  }
+  return { id, label, category: category as FixedCost['category'], amount, lastAppliedMonth }
 }
 
 /**
@@ -100,5 +127,10 @@ export function parseBackupJson(text: string): BackupData {
     throw new Error('同じIDの支出が重複しています')
   }
 
-  return { settings: { monthlyBudget: settings.monthlyBudget }, expenses }
+  // バージョン1のファイルには毎月の固定費がないので、空として読み込む
+  const rawFixedCosts = settings.fixedCosts ?? []
+  if (!Array.isArray(rawFixedCosts)) throw new Error('毎月の固定費のデータが正しくありません')
+  const fixedCosts = rawFixedCosts.map(parseFixedCost)
+
+  return { settings: { monthlyBudget: settings.monthlyBudget, fixedCosts }, expenses }
 }

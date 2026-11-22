@@ -47,12 +47,30 @@ export interface Expense {
   date: string
   /** 記録した時刻（ミリ秒）。同じ日の並び順に使う */
   createdAt: number
+  /** メモ（例：Netflix）。毎月の固定費から自動で作った記録には、その名前が入る */
+  memo?: string
+  /** 毎月の固定費から自動で作った記録なら、その固定費のID */
+  fixedCostId?: string
+}
+
+/** 毎月の固定費（毎月1日に自動で記録する） */
+export interface FixedCost {
+  id: string
+  /** 名前（例：スマホ代、Netflix） */
+  label: string
+  category: Category
+  /** 金額（円、正の整数） */
+  amount: number
+  /** 最後に自動で記録した月（YYYY-MM）。空なら、まだ一度も記録していない */
+  lastAppliedMonth: string
 }
 
 /** 設定 */
 export interface Settings {
   /** 月の予算（円）。0 は未設定 */
   monthlyBudget: number
+  /** 毎月の固定費 */
+  fixedCosts: FixedCost[]
 }
 
-export const DEFAULT_SETTINGS: Settings = { monthlyBudget: 0 }
+export const DEFAULT_SETTINGS: Settings = { monthlyBudget: 0, fixedCosts: [] }

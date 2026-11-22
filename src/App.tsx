@@ -27,8 +27,8 @@ const TITLES: Record<Tab, string> = {
 }
 
 function App() {
-  const data = useAppData()
   const today = useToday()
+  const data = useAppData(today)
   const [tab, setTab] = useState<Tab>('home')
   const [editing, setEditing] = useState<Expense | null>(null)
   const [toast, setToast] = useState('')
@@ -84,6 +84,9 @@ function App() {
             today={today}
             persisted={data.persisted}
             onSaveSettings={data.updateSettings}
+            onAddFixedCost={data.addFixedCost}
+            onUpdateFixedCost={data.updateFixedCost}
+            onRemoveFixedCost={data.removeFixedCost}
             onReplaceAll={data.replaceAllData}
           />
         )}

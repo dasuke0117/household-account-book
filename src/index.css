@@ -767,6 +767,45 @@ ol {
   font-weight: 700;
 }
 
+.fixed-cost-list {
+  margin-top: 8px;
+}
+
+.fixed-cost-list li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.fixed-cost-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.chevron {
+  color: var(--color-muted);
+  font-size: 20px;
+}
+
+.fixed-cost-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.fixed-cost-total strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.add-button {
+  margin-top: 12px;
+}
+
 .button-column {
   display: flex;
   flex-direction: column;

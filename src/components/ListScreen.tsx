@@ -1,7 +1,7 @@
 // 一覧画面：「無駄」「微妙」にした支出とカテゴリ別合計。「すべて」で全部の記録も見られる
 import { useState } from 'react'
 import { expensesInMonth, sortNewestFirst, totalsByCategory, wastefulExpenses } from '../lib/budget'
-import { formatMonthLabel, monthKeyOf, previousMonthKey } from '../lib/date'
+import { formatMonthLabel, monthKeyOf, nextMonthKey, previousMonthKey } from '../lib/date'
 import { formatYen } from '../lib/format'
 import type { Expense } from '../lib/types'
 import { ExpenseRow } from './ExpenseRow'
@@ -10,12 +10,6 @@ interface Props {
   expenses: Expense[]
   today: string
   onEdit: (expense: Expense) => void
-}
-
-/** 次の月のキー（YYYY-MM） */
-function nextMonthKey(monthKey: string): string {
-  const [y, m] = monthKey.split('-').map(Number)
-  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`
 }
 
 export function ListScreen({ expenses, today, onEdit }: Props) {

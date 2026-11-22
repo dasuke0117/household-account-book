@@ -17,6 +17,7 @@ export function EditSheet({ expense, today, onSave, onDelete, onClose }: Props) 
   const [category, setCategory] = useState<Category>(expense.category)
   const [rating, setRating] = useState(expense.rating)
   const [date, setDate] = useState(expense.date)
+  const [memo, setMemo] = useState(expense.memo ?? '')
   const [busy, setBusy] = useState(false)
 
   const amount = Number(amountText)
@@ -34,7 +35,12 @@ export function EditSheet({ expense, today, onSave, onDelete, onClose }: Props) 
     }
   }
 
-  const save = () => run(() => onSave({ ...expense, amount, category, rating, date }))
+  const save = () =>
+    run(() => {
+      const { memo: _oldMemo, ...rest } = expense
+      const trimmed = memo.trim()
+      return onSave({ ...rest, amount, category, rating, date, ...(trimmed && { memo: trimmed }) })
+    })
 
   const remove = () => {
     if (!confirm('この記録を削除しますか？')) return
@@ -51,6 +57,11 @@ export function EditSheet({ expense, today, onSave, onDelete, onClose }: Props) 
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="sheet-title">記録の編集</h2>
+        {expense.fixedCostId && (
+          <p className="hint left">
+            毎月の固定費から自動で記録したものです。ここで変えるのはこの月の分だけです。来月以降の金額は「設定」の毎月の固定費で変えてください。
+          </p>
+        )}
 
         <p className="field-label">評価</p>
         <div className="rating-buttons rating-buttons-small">
@@ -92,6 +103,17 @@ export function EditSheet({ expense, today, onSave, onDelete, onClose }: Props) 
         <label className="field">
           <span className="field-label">日付</span>
           <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
+        </label>
+
+        <label className="field">
+          <span className="field-label">メモ</span>
+          <input
+            type="text"
+            value={memo}
+            maxLength={30}
+            placeholder="なし"
+            onChange={(e) => setMemo(e.target.value)}
+          />
         </label>
 
         <div className="sheet-actions">

@@ -1,8 +1,10 @@
-// 設定画面：月の予算とバックアップ
+// 設定画面：月の予算、毎月の固定費、バックアップ
 import { useRef, useState, type ChangeEvent } from 'react'
+import type { FixedCostInput } from '../hooks/useAppData'
 import { backupFileName, createBackupJson, parseBackupJson } from '../lib/backup'
 import { formatYen } from '../lib/format'
-import type { Expense, Settings } from '../lib/types'
+import type { Expense, FixedCost, Settings } from '../lib/types'
+import { FixedCostSheet } from './FixedCostSheet'
 
 interface Props {
   settings: Settings
@@ -10,6 +12,9 @@ interface Props {
   today: string
   persisted: boolean | null
   onSaveSettings: (settings: Settings) => Promise<void>
+  onAddFixedCost: (input: FixedCostInput) => Promise<void>
+  onUpdateFixedCost: (fixedCost: FixedCost) => Promise<void>
+  onRemoveFixedCost: (id: string) => Promise<void>
   onReplaceAll: (expenses: Expense[], settings: Settings) => Promise<void>
 }
 
@@ -41,13 +46,19 @@ export function SettingsScreen({
   today,
   persisted,
   onSaveSettings,
+  onAddFixedCost,
+  onUpdateFixedCost,
+  onRemoveFixedCost,
   onReplaceAll,
 }: Props) {
   const [budgetText, setBudgetText] = useState(
     settings.monthlyBudget > 0 ? String(settings.monthlyBudget) : '',
   )
   const [message, setMessage] = useState('')
+  // 固定費のシート：null は閉じている、'new' は新規登録、FixedCost はその固定費の編集
+  const [fixedCostSheet, setFixedCostSheet] = useState<FixedCost | 'new' | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const fixedCostTotal = settings.fixedCosts.reduce((t, fc) => t + fc.amount, 0)
 
   const budget = Number(budgetText)
   const budgetChanged = budget !== settings.monthlyBudget
@@ -126,6 +137,42 @@ export function SettingsScreen({
       </section>
 
       <section className="card">
+        <h2 className="section-title">毎月の固定費</h2>
+        <p className="hint left">
+          登録しておくと、毎月1日付けで自動で記録します。電気代など月によって金額が違うものは、その月の記録を一覧から直してください。
+        </p>
+        {settings.fixedCosts.length > 0 && (
+          <ul className="fixed-cost-list">
+            {settings.fixedCosts.map((fc) => (
+              <li key={fc.id}>
+                <button type="button" className="fixed-cost-row" onClick={() => setFixedCostSheet(fc)}>
+                  <span className="expense-main">
+                    <span className="expense-category">{fc.label}</span>
+                    <span className="expense-date">{fc.category}</span>
+                  </span>
+                  <span className="expense-amount">{formatYen(fc.amount)}</span>
+                  <span className="chevron" aria-hidden="true">
+                    ›
+                  </span>
+                </button>
+              </li>
+            ))}
+            <li className="fixed-cost-total">
+              <span>合計（毎月）</span>
+              <strong>{formatYen(fixedCostTotal)}</strong>
+            </li>
+          </ul>
+        )}
+        <button
+          type="button"
+          className="secondary-button add-button"
+          onClick={() => setFixedCostSheet('new')}
+        >
+          ＋ 固定費を登録
+        </button>
+      </section>
+
+      <section className="card">
         <h2 className="section-title">バックアップ</h2>
         <p className="hint left">
           記録はこのiPhoneのブラウザの中だけに保存されています。機種変更やもしものときのために、ときどき書き出して「ファイル」アプリなどに保存してください。
@@ -158,6 +205,30 @@ export function SettingsScreen({
               : 'オフ（ホーム画面に追加して使うと、消えにくくなります）'}
         </p>
       </section>
+
+      {fixedCostSheet === 'new' && (
+        <FixedCostSheet
+          onSave={async (input) => {
+            await onAddFixedCost(input)
+            setMessage(`「${input.label}」を登録し、今月分を記録しました`)
+          }}
+          onClose={() => setFixedCostSheet(null)}
+        />
+      )}
+      {fixedCostSheet && fixedCostSheet !== 'new' && (
+        <FixedCostSheet
+          fixedCost={fixedCostSheet}
+          onSave={async (input) => {
+            await onUpdateFixedCost({ ...fixedCostSheet, ...input })
+            setMessage(`「${input.label}」を変更しました`)
+          }}
+          onDelete={async () => {
+            await onRemoveFixedCost(fixedCostSheet.id)
+            setMessage(`「${fixedCostSheet.label}」の登録をやめました`)
+          }}
+          onClose={() => setFixedCostSheet(null)}
+        />
+      )}
     </div>
   )
 }

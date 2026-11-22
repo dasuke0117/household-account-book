@@ -32,6 +32,12 @@ export function previousMonthKey(monthKey: string): string {
   return toDateKey(prev).slice(0, 7)
 }
 
+/** 次の月のキー（YYYY-MM） */
+export function nextMonthKey(monthKey: string): string {
+  const [y, m] = monthKey.split('-').map(Number)
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`
+}
+
 /** YYYY-MM-DD が正しい日付かどうか */
 export function isValidDateKey(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false

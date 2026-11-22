@@ -11,15 +11,22 @@ interface Props {
 }
 
 export function ExpenseRow({ expense, showDate = false, onClick }: Props) {
+  const sub = [showDate ? formatDateLabel(expense.date) : '', expense.memo ?? '']
+    .filter(Boolean)
+    .join('・')
   return (
     <li>
       <button type="button" className="expense-row" onClick={onClick}>
         <span className="expense-main">
           <span className="expense-category">
             {expense.category}
-            {isFixedCategory(expense.category) && <span className="tag">固定費</span>}
+            {expense.fixedCostId ? (
+              <span className="tag">毎月</span>
+            ) : (
+              isFixedCategory(expense.category) && <span className="tag">固定費</span>
+            )}
           </span>
-          {showDate && <span className="expense-date">{formatDateLabel(expense.date)}</span>}
+          {sub && <span className="expense-date">{sub}</span>}
         </span>
         <RatingBadge rating={expense.rating} />
         <span className="expense-amount">{formatYen(expense.amount)}</span>
