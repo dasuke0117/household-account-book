@@ -1,0 +1,60 @@
+# 家計簿アプリ MVP仕様
+
+最終更新: 2026-11-22
+
+## 目的
+無駄遣いを防ぐ。アプリを開いた瞬間に「今月の無駄遣い」と「あと使える金額」が分かること。
+
+## 前提
+- 記録はiPhoneがメイン。Macを持っていないので、ネイティブiOSアプリ（Swift/Xcode）は使わない。
+- iPhoneのSafariで開いて「ホーム画面に追加」するWebアプリ（PWA）にする。
+- 開発環境はVSCode。説明・コメント・コミットメッセージは日本語。
+- データはスマホ内（ブラウザ）に保存し、ログインやサーバーは使わない。
+- 公開先はGitHub Pages（`https://<ユーザー名>.github.io/household-account-book/`）。
+
+## 全体計画（4ステップ）
+1. ✅ MVP機能を決める（この文書の仕様で決定済み）
+2. 技術構成を決めてリポジトリに雛形を作る
+3. MVPを作る
+4. iPhoneで1〜2週間使って改善する
+
+## 機能
+1. **ホーム画面**：今月あと使える金額／今日使っていい金額（残り÷今月の残り日数）／今月の「無駄」合計と「微妙」合計を大きく表示
+2. **3タップ入力**：金額 → カテゴリ → 評価（必要／微妙／無駄）で保存
+3. **月の予算**：月全体で1つ
+4. **無駄遣い一覧**：今月「無駄」「微妙」にした支出を新しい順に表示、カテゴリ別合計も表示
+5. **先月比較**：「無駄」「微妙」の合計が先月より増えたか減ったか
+6. **バックアップ**：データをJSONファイルに書き出し・読み込み
+
+## 評価（3段階）
+必要／微妙／無駄
+
+## カテゴリ（14個）
+食費、外食費、日用品、交通費、衣服、交際費、趣味、通信費、ローン、電気・水道代、理髪・美容、貯金、サブスク、その他
+
+## 固定費の扱い（決定）
+- 固定費カテゴリ：通信費、ローン、電気・水道代、貯金、サブスク
+- 固定費は評価を自動で「必要」にし、入力時の評価選択を省く。
+- あとから手動で評価を変更できる（サブスクの見直しで「無駄」に変えられるように）。
+- 「あと使える金額」は、月の予算から固定費を先に差し引いた「自由に使えるお金」を基準に計算する。
+
+## ステップ2：雛形づくり
+- `npm create vite@latest . -- --template react-ts` で Vite + React + TypeScript の雛形を作る。
+- `vite-plugin-pwa` でPWA化する。
+  - `registerType: 'autoUpdate'`
+  - manifest：name「無駄遣いストッパー家計簿」、short_name「家計簿」、lang「ja」、display「standalone」、theme_color `#16a34a`
+- `vite.config.ts` の `base` を `/household-account-book/` にする。
+- アイコン：`public/pwa-192x192.png`、`public/pwa-512x512.png`、`public/apple-touch-icon.png`（180x180）。緑地（`#16a34a`）に白の「¥」。
+- `index.html`：`lang="ja"`、apple-touch-icon の link、`apple-mobile-web-app-capable`、viewport に `viewport-fit=cover`。
+- CSSはiPhoneのセーフエリア（`env(safe-area-inset-*)`）を考慮し、最大幅480px程度のスマホ向けレイアウトにする。
+- `.github/workflows/deploy.yml`：main へのpushで `npm ci` → `npm run build` → `actions/upload-pages-artifact`（path: `dist`）→ `actions/deploy-pages` で公開。
+- README.md に日本語で書くこと：
+  - 開発の始め方（`npm install` / `npm run dev`、iPhoneから試すときは `npm run dev -- --host`）
+  - GitHub Pagesの初回設定（Settings → Pages → Source を「GitHub Actions」）
+  - iPhoneでのホーム画面追加の手順
+- `npm run build` が通ることを確認してからコミットし、pushする。pushの前にユウに確認する。
+
+## ステップ3：MVP実装の方針
+- データ保存はIndexedDB（例：idb や dexie）かlocalStorage。iPhoneのSafariでデータが消えにくいよう、`navigator.storage.persist()` も呼ぶ。
+- 画面はホーム／入力／一覧／設定（予算・バックアップ）の4つ程度。入力は片手で3タップで終わることを最優先にする。
+- 計算ロジック（あと使える金額、今日使っていい金額、先月比較）は関数に分けて、Vitestでテストを書く。
