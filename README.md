@@ -45,6 +45,7 @@ npm run dev -- --host
 npm run build    # 公開用にビルド（dist フォルダに出力）
 npm run preview  # ビルドした結果をローカルで確認
 npm run lint     # コードのチェック
+npm test         # 計算ロジックのテスト（Vitest）
 ```
 
 ## GitHub Pages の初回設定
